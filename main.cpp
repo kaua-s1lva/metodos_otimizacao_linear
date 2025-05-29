@@ -7,46 +7,6 @@
 
 #define PEN 100
 
-void calcular_horas_extras(Solucao& sol) {
-    int total = 0;
-    for (int i=0; i<MAX_MOT; i++) {
-        total += MAX(sol.vet_hora_trab[i] - temp_norm_trab, 0);
-        sol.fo += MAX(sol.vet_hora_trab[i] - temp_norm_trab, 0);
-    }
-    printf("\nCalculo de horas extras: %d\n", total);
-}
-
-void calcular_tempo_ocioso(Solucao& sol) {
-    int total = 0;
-    for (int i=0; i<MAX_MOT; i++) {
-        for (int j=0; j<sol.aux[i]-1; j++) {
-            total += vet_hora_ini[sol.mat_sol[i][j+1]] - vet_hora_fim[sol.mat_sol[i][j]];
-            sol.fo += vet_hora_ini[sol.mat_sol[i][j+1]] - vet_hora_fim[sol.mat_sol[i][j]];
-        }
-    }
-    printf("\nCalculo de tempo ocioso: %d\n", total);
-}
-
-void calcular_tempo_sobreposicao(Solucao& sol) {
-    int total = 0;
-    for (int i=0; i<MAX_MOT; i++) {
-        for (int j=0; j<sol.aux[i]-1; j++) {
-            total += MIN(vet_hora_ini[sol.mat_sol[i][j+1]] - vet_hora_fim[sol.mat_sol[i][j]], 0) * (-PEN);
-            sol.fo += MIN(vet_hora_ini[sol.mat_sol[i][j+1]] - vet_hora_fim[sol.mat_sol[i][j]], 0) * (-PEN);
-        }
-    }
-    printf("\nCalculo de tempo de sobreposicao: %d\n", total);
-}
-
-void calcular_tempo_acima_max(Solucao& sol) {
-    int total = 0;
-    for (int i=0; i<MAX_MOT; i++) {
-        total += MAX(sol.vet_hora_trab[i] - temp_max_trab, 0) * PEN;
-        sol.fo += MAX(sol.vet_hora_trab[i] - temp_max_trab, 0) * PEN;
-    }
-    printf("\nCalculo de tempo acima do limite: %d\n", total);
-}
-
 int main() {
     Solucao sol;
 
@@ -55,7 +15,6 @@ int main() {
     criar_solucao(sol);
     calcular_fo_solucao(sol);
     imprimir_solucao(sol);
-    printf("\nValor da fo: %d", sol.fo);
 
     return 0;
 }
@@ -95,20 +54,27 @@ void calcular_fo_solucao(Solucao& sol) {
     sol.fo = 0;
 
     memset(&sol.vet_hora_trab, 0, sizeof(sol.vet_hora_trab));
+    sol.hora_extra = sol.temp_exces = sol.temp_ocios = sol.temp_sobre = 0;
 
     for (int i=0; i<MAX_MOT; i++) {
         for (int j=0; j<sol.aux[i]; j++) {
+            //--------------------------CALCULAR HORA TRABALHADA--------------------------------------------
             sol.vet_hora_trab[i] += vet_hora_fim[sol.mat_sol[i][j]] - vet_hora_ini[sol.mat_sol[i][j]];
+
+            //--------------------------CALCULAR TEMPO OCIOSO ENTRE TAREFAS---------------------------------
+            sol.temp_ocios += vet_hora_ini[sol.mat_sol[i][j+1]] - vet_hora_fim[sol.mat_sol[i][j]];
+
+            //--------------------------CALCULAR TEMPO DE SOBREPOSIÇÃO--------------------------------------
+            sol.temp_sobre += MIN(vet_hora_ini[sol.mat_sol[i][j+1]] - vet_hora_fim[sol.mat_sol[i][j]], 0) * (-PEN);
         }
+        //------------------------------CALCULAR HORA EXTRA-------------------------------------------------
+        sol.hora_extra += MAX(sol.vet_hora_trab[i] - temp_norm_trab, 0);
+
+        //------------------------------CALCULAR TEMPO EXCESSIVO--------------------------------------------
+        sol.temp_exces += MAX(sol.vet_hora_trab[i] - temp_max_trab, 0) * PEN;
     }
 
-    calcular_horas_extras(sol);
-
-    calcular_tempo_ocioso(sol);
-
-    calcular_tempo_sobreposicao(sol);
-
-    calcular_tempo_acima_max(sol);
+    sol.fo = sol.temp_ocios + sol.temp_sobre + sol.hora_extra + sol.temp_exces;
 }
 
 void imprimir_solucao(Solucao& sol) {
@@ -129,6 +95,11 @@ void imprimir_solucao(Solucao& sol) {
     for (int i=0; i<MAX_MOT; i++) {
         printf("%3d ", sol.aux[i]);
     }
+
+    printf("\nValor TEMPO OCIOSO ENTRE TAREFAS: %d\n", sol.temp_ocios);
+    printf("\nValor TEMPO DE SOBREPOSICAO: %d\n", sol.temp_sobre);
+    printf("\nValor HORA EXTRA: %d\n", sol.hora_extra);
+    printf("\nValor TEMPO EXCESSIVO: %d\n", sol.temp_exces);
 
     printf("\nValor da fo: %d", sol.fo);
 }
