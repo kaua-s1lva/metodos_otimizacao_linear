@@ -23,4 +23,5 @@ void ler_arquivo(char* path);
 void imprimir_dados_arquivo();
 void criar_solucao(Solucao& sol);
 void calcular_fo_solucao(Solucao& sol);
+void gerar_vizinho(Solucao& sol);
 void imprimir_solucao(Solucao& sol);
