@@ -21,14 +21,18 @@ int main() {
     //imprimir_solucao(sol);
 
     memcpy(&sol2, &sol, sizeof(sol2));
+    imprimir_solucao(sol2);
 
     for (int i=0; i<1000; i++) {
         gerar_vizinho(sol2);
+        printf("\n%d: %d", i, sol2.fo);
         if (sol2.fo <= sol.fo) {
             memcpy(&sol, &sol2, sizeof(sol));
+            printf("\nVALOR ENCONTRADO: %d: %d", i, sol2.fo);
         }
     }
 
+    printf("\nSolucao 1:\n");
     imprimir_solucao(sol);
     imprimir_solucao(sol2);
 
@@ -129,11 +133,11 @@ void gerar_vizinho(Solucao& sol) {
         inserir_tarefa(sol, tar, mot_pos);
 
         //PROBLEMA: precisa garantir que o mot_pre precisa ser não nulo, ou seja, sol.aux[mot_pre] != 0
-    } while (mot_pos == mot_pre);
+    } while (mot_pos == mot_pre || sol.aux[mot_pre] == 0);
 
     
     calcular_fo_solucao(sol);
-    printf("Valor da fo: %d\n", sol.fo);
+    //printf("Valor da fo: %d\n", sol.fo);
 }
 
 void imprimir_solucao(Solucao& sol) {
@@ -186,4 +190,6 @@ void remover_tarefa(Solucao& sol, int pos, int mot) {
     for (int i=pos; i<sol.aux[mot]; i++) {
         sol.mat_sol[mot][i] = sol.mat_sol[mot][i+1];
     }
+
+    sol.aux[mot]--;
 }
