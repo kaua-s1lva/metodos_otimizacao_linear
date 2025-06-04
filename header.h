@@ -25,3 +25,5 @@ void criar_solucao(Solucao& sol);
 void calcular_fo_solucao(Solucao& sol);
 void gerar_vizinho(Solucao& sol);
 void imprimir_solucao(Solucao& sol);
+void inserir_tarefa(Solucao& sol, int tarefa, int mot);
+void remover_tarefa(Solucao& sol, int pos, int mot);

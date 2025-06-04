@@ -102,14 +102,18 @@ void gerar_vizinho(Solucao& sol) {
     int pos_tar = rand() % (sol.aux[mot_pre]);
     int tar = sol.mat_sol[mot_pre][pos_tar];
 
+    /*
     for (int i=pos_tar; i<sol.aux[mot_pre]; i++) {
         sol.mat_sol[mot_pre][i] = sol.mat_sol[mot_pre][i+1];
     }
+    */
+    remover_tarefa(sol, pos_tar, mot_pre);
 
     do {
         mot_pos = rand() % MAX_MOT;
 
         //método de inserção
+        /*
         int i;
         for (i = sol.aux[mot_pos] - 1; i>=0; i--) {
             if (vet_hora_ini[sol.mat_sol[mot_pos][i]] > vet_hora_ini[tar]) {
@@ -121,6 +125,8 @@ void gerar_vizinho(Solucao& sol) {
 
         sol.mat_sol[mot_pos][i + 1] = tar;
         sol.aux[mot_pos]++;
+        */
+        inserir_tarefa(sol, tar, mot_pos);
 
         //PROBLEMA: precisa garantir que o mot_pre precisa ser não nulo, ou seja, sol.aux[mot_pre] != 0
     } while (mot_pos == mot_pre);
@@ -160,4 +166,24 @@ void imprimir_solucao(Solucao& sol) {
     printf("\nValor TEMPO EXCESSIVO: %d\n", sol.temp_exces);
 
     printf("\nValor da fo: %d", sol.fo);
+}
+
+void inserir_tarefa(Solucao& sol, int tarefa, int mot) {
+    int i;
+    for (i = sol.aux[mot] - 1; i>=0; i--) {
+        if (vet_hora_ini[sol.mat_sol[mot][i]] > vet_hora_ini[tarefa]) {
+            sol.mat_sol[mot][i + 1] = sol.mat_sol[mot][i];
+        } else {
+            break;
+        }
+    }
+
+    sol.mat_sol[mot][i + 1] = tarefa;
+    sol.aux[mot]++;
+}
+
+void remover_tarefa(Solucao& sol, int pos, int mot) {
+    for (int i=pos; i<sol.aux[mot]; i++) {
+        sol.mat_sol[mot][i] = sol.mat_sol[mot][i+1];
+    }
 }
