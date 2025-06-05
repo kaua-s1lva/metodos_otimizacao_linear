@@ -15,7 +15,7 @@
 int main() {
     Solucao sol, sol2;
 
-    //srand(time(NULL));
+    srand(time(NULL));
 
     ler_arquivo("../csp25.txt");
     //imprimir_dados_arquivo();
@@ -24,7 +24,7 @@ int main() {
 
     memcpy(&sol2, &sol, sizeof(sol2));
 
-    for (int i=0; i<1000; i++) {
+    for (int i=0; i<10000; i++) {
         gerar_vizinho(sol2);
         if (sol2.fo <= sol.fo) {
             memcpy(&sol, &sol2, sizeof(sol));
@@ -106,21 +106,22 @@ void calcular_fo_solucao(Solucao& sol) {
 }
 
 void gerar_vizinho(Solucao& sol) {
-    int mot_pre = rand() % MAX_MOT;
-    int mot_pos;
-    int pos_tar = rand() % (sol.aux[mot_pre]);
-    int tar = sol.mat_sol[mot_pre][pos_tar];
 
-    remover_tarefa(sol, pos_tar, mot_pre);
+    int mot_pre, mot_pos, pos_tar, tar;
+    do {
+        mot_pre = rand() % MAX_MOT;
+    } while (sol.aux[mot_pre] == 0);
+
+    pos_tar = rand() % (sol.aux[mot_pre]);
+    tar = sol.mat_sol[mot_pre][pos_tar];
 
     do {
         mot_pos = rand() % MAX_MOT;
+    } while (mot_pos == mot_pre);
 
-        inserir_tarefa(sol, tar, mot_pos);
-
-        //PROBLEMA: precisa garantir que o mot_pre precisa ser não nulo, ou seja, sol.aux[mot_pre] != 0
-    } while (mot_pos == mot_pre || sol.aux[mot_pre] == 0);
-
+    remover_tarefa(sol, pos_tar, mot_pre);
+    
+    inserir_tarefa(sol, tar, mot_pos);
     
     calcular_fo_solucao(sol);
 }
@@ -129,6 +130,7 @@ void imprimir_solucao(Solucao& sol) {
     printf("\nMatriz solucao: \n");
     for (int i=0; i<MAX_MOT; i++) {
         printf("%4d |", i);
+        printf(" %4d |", sol.aux[i]);
         for (int j=0; j<MAX_TAR; j++) {
             printf("%4d ", sol.mat_sol[i][j]);
         }
@@ -158,7 +160,7 @@ void inserir_tarefa(Solucao& sol, int& tarefa, int& mot) {
 }
 
 void remover_tarefa(Solucao& sol, int& pos, int& mot) {
-    for (int i=pos; i<sol.aux[mot]; i++) {
+    for (int i=pos; i<sol.aux[mot] - 1; i++) {
         sol.mat_sol[mot][i] = sol.mat_sol[mot][i+1];
     }
 
