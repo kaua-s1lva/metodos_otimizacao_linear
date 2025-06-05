@@ -7,7 +7,10 @@
 #define MAX(X,Y) (X > Y ? X : Y)
 #define MIN(X,Y) (X < Y ? X : Y)
 
-#define PEN 100
+#define PEN_TEM_OCI 1
+#define PEN_TEM_SOB 100
+#define PEN_HOR_EXT 1
+#define PEN_TEM_EXC 100
 
 int main() {
     Solucao sol, sol2;
@@ -18,21 +21,16 @@ int main() {
     //imprimir_dados_arquivo();
     criar_solucao(sol);
     calcular_fo_solucao(sol);
-    //imprimir_solucao(sol);
 
     memcpy(&sol2, &sol, sizeof(sol2));
-    imprimir_solucao(sol2);
 
     for (int i=0; i<1000; i++) {
         gerar_vizinho(sol2);
-        printf("\n%d: %d", i, sol2.fo);
         if (sol2.fo <= sol.fo) {
             memcpy(&sol, &sol2, sizeof(sol));
-            printf("\nVALOR ENCONTRADO: %d: %d", i, sol2.fo);
         }
     }
 
-    printf("\nSolucao 1:\n");
     imprimir_solucao(sol);
     imprimir_solucao(sol2);
 
@@ -77,27 +75,34 @@ void calcular_fo_solucao(Solucao& sol) {
     sol.hora_extra = sol.temp_exces = sol.temp_ocios = sol.temp_sobre = 0;
 
     for (int i=0; i<MAX_MOT; i++) {
-        for (int j=1; j<sol.aux[i]; j++) {
-            //--------------------------CALCULAR HORA TRABALHADA--------------------------------------------
-            sol.vet_hora_trab[i] += vet_hora_fim[sol.mat_sol[i][j]] - vet_hora_ini[sol.mat_sol[i][j]];
+        if (sol.aux[i] > 0) {
+            for (int j=1; j<sol.aux[i]; j++) {
+                //--------------------------CALCULAR HORA TRABALHADA--------------------------------------------
+                sol.vet_hora_trab[i] += vet_hora_fim[sol.mat_sol[i][j-1]] - vet_hora_ini[sol.mat_sol[i][j-1]];
 
-            //--------------------------CALCULAR TEMPO OCIOSO ENTRE TAREFAS---------------------------------
-            sol.temp_ocios += vet_hora_ini[sol.mat_sol[i][j+1]] - vet_hora_fim[sol.mat_sol[i][j]];
+                //--------------------------CALCULAR TEMPO OCIOSO ENTRE TAREFAS---------------------------------
+                sol.temp_ocios += MAX(vet_hora_ini[sol.mat_sol[i][j]] - vet_hora_fim[sol.mat_sol[i][j-1]], 0);
 
-            //--------------------------CALCULAR TEMPO DE SOBREPOSIÇÃO--------------------------------------
-            sol.temp_sobre += MIN(vet_hora_ini[sol.mat_sol[i][j+1]] - vet_hora_fim[sol.mat_sol[i][j]], 0) * (-PEN);
+                //--------------------------CALCULAR TEMPO DE SOBREPOSIÇÃO--------------------------------------
+                sol.temp_sobre += MIN(vet_hora_ini[sol.mat_sol[i][j]] - vet_hora_fim[sol.mat_sol[i][j-1]], 0) * -1;
+            }
+            //------------------------------CALCULAR HORA EXTRA-------------------------------------------------
+            sol.hora_extra += MAX(sol.vet_hora_trab[i] - temp_norm_trab, 0) - MAX(sol.vet_hora_trab[i] - temp_max_trab, 0);
+
+            //------------------------------CALCULAR TEMPO EXCESSIVO--------------------------------------------
+            sol.temp_exces += MAX(sol.vet_hora_trab[i] - temp_max_trab, 0);
+
+            //--------------------------CALCULAR TEMPO OCIOSO ENTRE A ULTIMA TAREFA E O TEMPO DE TRABALHO-------
+            sol.temp_ocios += MAX(temp_norm_trab - sol.vet_hora_trab[i], 0);
         }
-        //------------------------------CALCULAR HORA EXTRA-------------------------------------------------
-        sol.hora_extra += MAX(sol.vet_hora_trab[i] - temp_norm_trab, 0) - MAX(sol.vet_hora_trab[i] - temp_max_trab, 0);
 
-        //------------------------------CALCULAR TEMPO EXCESSIVO--------------------------------------------
-        sol.temp_exces += MAX(sol.vet_hora_trab[i] - temp_max_trab, 0) * PEN;
-
-        //--------------------------CALCULAR TEMPO OCIOSO ENTRE A ULTIMA TAREFA E O TEMPO DE TRABALHO-------
-        //sol.temp_ocios += vet_hora_ini[sol.mat_sol[i][j+1]] - vet_hora_fim[sol.mat_sol[i][j]];
     }
 
-    sol.fo = sol.temp_ocios + sol.temp_sobre + sol.hora_extra + sol.temp_exces;
+    sol.fo =    sol.temp_ocios * PEN_TEM_OCI + 
+                sol.temp_sobre * PEN_TEM_SOB + 
+                sol.hora_extra * PEN_HOR_EXT + 
+                sol.temp_exces * PEN_TEM_EXC
+    ;
 }
 
 void gerar_vizinho(Solucao& sol) {
@@ -106,30 +111,11 @@ void gerar_vizinho(Solucao& sol) {
     int pos_tar = rand() % (sol.aux[mot_pre]);
     int tar = sol.mat_sol[mot_pre][pos_tar];
 
-    /*
-    for (int i=pos_tar; i<sol.aux[mot_pre]; i++) {
-        sol.mat_sol[mot_pre][i] = sol.mat_sol[mot_pre][i+1];
-    }
-    */
     remover_tarefa(sol, pos_tar, mot_pre);
 
     do {
         mot_pos = rand() % MAX_MOT;
 
-        //método de inserção
-        /*
-        int i;
-        for (i = sol.aux[mot_pos] - 1; i>=0; i--) {
-            if (vet_hora_ini[sol.mat_sol[mot_pos][i]] > vet_hora_ini[tar]) {
-                sol.mat_sol[mot_pos][i + 1] = sol.mat_sol[mot_pos][i];
-            } else {
-                break;
-            }
-        }
-
-        sol.mat_sol[mot_pos][i + 1] = tar;
-        sol.aux[mot_pos]++;
-        */
         inserir_tarefa(sol, tar, mot_pos);
 
         //PROBLEMA: precisa garantir que o mot_pre precisa ser não nulo, ou seja, sol.aux[mot_pre] != 0
@@ -137,31 +123,16 @@ void gerar_vizinho(Solucao& sol) {
 
     
     calcular_fo_solucao(sol);
-    //printf("Valor da fo: %d\n", sol.fo);
 }
 
 void imprimir_solucao(Solucao& sol) {
-    printf("Matriz solucao: \n");
+    printf("\nMatriz solucao: \n");
     for (int i=0; i<MAX_MOT; i++) {
         printf("%4d |", i);
         for (int j=0; j<MAX_TAR; j++) {
             printf("%4d ", sol.mat_sol[i][j]);
         }
         printf("\n");
-    }
-
-    printf("\nVetor auxiliar: \n");
-    for (int i=0; i<MAX_MOT; i++) {
-        printf("%3d ", i);
-    }
-    printf("\n");
-    for (int i=0; i<MAX_MOT; i++) {
-        printf("%3d ", sol.aux[i]);
-    }
-
-    printf("\nVetor de horas trabalhadas: \n");
-    for (int i=0; i<MAX_MOT; i++) {
-        printf("%3d ", sol.vet_hora_trab[i]);
     }
 
     printf("\nValor TEMPO OCIOSO ENTRE TAREFAS: %d\n", sol.temp_ocios);
@@ -172,7 +143,7 @@ void imprimir_solucao(Solucao& sol) {
     printf("\nValor da fo: %d", sol.fo);
 }
 
-void inserir_tarefa(Solucao& sol, int tarefa, int mot) {
+void inserir_tarefa(Solucao& sol, int& tarefa, int& mot) {
     int i;
     for (i = sol.aux[mot] - 1; i>=0; i--) {
         if (vet_hora_ini[sol.mat_sol[mot][i]] > vet_hora_ini[tarefa]) {
@@ -186,7 +157,7 @@ void inserir_tarefa(Solucao& sol, int tarefa, int mot) {
     sol.aux[mot]++;
 }
 
-void remover_tarefa(Solucao& sol, int pos, int mot) {
+void remover_tarefa(Solucao& sol, int& pos, int& mot) {
     for (int i=pos; i<sol.aux[mot]; i++) {
         sol.mat_sol[mot][i] = sol.mat_sol[mot][i+1];
     }
