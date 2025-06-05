@@ -19,9 +19,10 @@ int main() {
 
     ler_arquivo("../csp25.txt");
     //imprimir_dados_arquivo();
-    criar_solucao(sol);
+    criar_solucao_aleatoria(sol);
     calcular_fo_solucao(sol);
-
+    imprimir_solucao(sol);
+/*
     memcpy(&sol2, &sol, sizeof(sol2));
 
     for (int i=0; i<10000; i++) {
@@ -33,7 +34,7 @@ int main() {
 
     imprimir_solucao(sol);
     imprimir_solucao(sol2);
-
+*/
     return 0;
 }
 
@@ -65,6 +66,26 @@ void criar_solucao(Solucao& sol) {
         sol.mat_sol[aux][sol.aux[aux]] = i;
         sol.aux[aux]++;
     }
+
+}
+
+void criar_solucao_aleatoria(Solucao& sol) {
+    memset(&sol.mat_sol, 0, sizeof(sol.mat_sol));
+    memset(&sol.aux, 0, sizeof(sol.aux));
+
+    int mot;
+    for (int i=0; i<num_tarefas; i++) {
+        mot = rand() % (MAX_MOT-1); //DUVIDA: COLOCAR -1?
+        sol.mat_sol[mot][sol.aux[mot]] = i;
+        sol.aux[mot]++;
+    }
+}
+
+void criar_solucao_gulosa(Solucao& sol) {
+
+}
+
+void criar_solucao_aleatoria_gulosa(Solucao& sol) {
 
 }
 
