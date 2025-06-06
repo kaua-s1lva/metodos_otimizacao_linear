@@ -1,6 +1,6 @@
 
 #define MAX_TAR 25
-#define MAX_MOT 10 //IMPORTANTE! EXISTE UM CÁLCULO MINIMO, SERÁ NECESSÁRIO FAZER ESSE CÁLCULO
+#define MAX_MOT 10
 
 int num_tarefas;
 int temp_norm_trab;
@@ -31,3 +31,4 @@ void gerar_vizinho(Solucao& sol);
 void imprimir_solucao(Solucao& sol);
 void inserir_tarefa(Solucao& sol, int& tarefa, int& mot);
 void remover_tarefa(Solucao& sol, int& pos, int& mot);
+void ordenar_vet_horas();

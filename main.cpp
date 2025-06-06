@@ -16,7 +16,7 @@ int main() {
     int duracao = 0;
     Solucao sol, sol2;
 
-    //srand(time(NULL));
+    srand(time(NULL));
 
     ler_arquivo("../csp25.txt");
 
@@ -24,12 +24,12 @@ int main() {
         duracao += vet_hora_fim[i] - vet_hora_ini[i];
     }
 
-    num_motoristas = duracao / temp_norm_trab;
+    num_motoristas = (duracao / temp_norm_trab) + 1;
 
     criar_solucao_gulosa(sol);
     calcular_fo_solucao(sol);
-    imprimir_solucao(sol);
-/*
+    //imprimir_solucao(sol);
+
     memcpy(&sol2, &sol, sizeof(sol2));
 
     for (int i=0; i<100000; i++) {
@@ -41,7 +41,7 @@ int main() {
 
     imprimir_solucao(sol);
     imprimir_solucao(sol2);
-*/
+
     return 0;
 }
 
@@ -60,6 +60,23 @@ void imprimir_dados_arquivo() {
     printf("%d %d %d\n", num_tarefas, temp_norm_trab, temp_max_trab);
     for (int i=0; i<num_tarefas; i++) {
         printf("%d %d\n", vet_hora_ini[i], vet_hora_fim[i]);
+    }
+}
+
+void ordenar_vet_horas() {
+    int temp;
+    for (int i=num_tarefas-1; i > 0; i--) {
+        for (int j=0; j < i; j++) {
+            if (vet_hora_ini[j] > vet_hora_ini[j+1]) {
+                temp = vet_hora_ini[j];
+                vet_hora_ini[j] = vet_hora_ini[j+1];
+                vet_hora_ini[j+1] = temp;
+
+                temp = vet_hora_fim[j];
+                vet_hora_fim[j] = vet_hora_fim[j+1];
+                vet_hora_fim[j+1] = temp;
+            }
+        }
     }
 }
 
@@ -91,22 +108,17 @@ void criar_solucao_gulosa(Solucao& sol) {
     memset(&sol.mat_sol, -1, sizeof(sol.mat_sol));
     memset(&sol.aux, 0, sizeof(sol.aux));
 
-    //diminuindo o tempo ocioso
     for (int i=0; i<num_tarefas; i++) {
         for (int j=0; j<num_motoristas; j++) {
-            if ( 
-                vet_hora_fim[ sol.mat_sol[j][sol.aux[j]] ] <= vet_hora_ini[i] && 
-                
+            if (
+                //sobreposição
+                vet_hora_fim[ sol.mat_sol[j][MAX(sol.aux[j]-1, 0)] ] <= vet_hora_ini[i]
             ) {
                 sol.mat_sol[j][sol.aux[j]] = i;
                 sol.aux[j]++;
                 break;
             }
-/*
-            if (vet_hora_fim[sol.mat_sol[i][j]] < vet_hora_ini[sol.mat_sol[i][j+1]]) {
-                sol.mat_sol[i][sol.aux[i]] = j;
-            }
-*/
+
         }
     }
 
