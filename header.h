@@ -1,12 +1,13 @@
 
-#define MAX_TAR 26
-#define MAX_MOT 12 //IMPORTANTE! EXISTE UM CÁLCULO MINIMO, SERÁ NECESSÁRIO FAZER ESSE CÁLCULO
+#define MAX_TAR 25
+#define MAX_MOT 10 //IMPORTANTE! EXISTE UM CÁLCULO MINIMO, SERÁ NECESSÁRIO FAZER ESSE CÁLCULO
 
 int num_tarefas;
 int temp_norm_trab;
 int temp_max_trab;
 int vet_hora_ini[MAX_TAR];
 int vet_hora_fim[MAX_TAR];
+int num_motoristas;
 
 typedef struct tSolucao {
     int hora_extra;

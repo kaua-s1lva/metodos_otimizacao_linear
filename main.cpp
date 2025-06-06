@@ -13,19 +13,26 @@
 #define PEN_TEM_EXC 100
 
 int main() {
+    int duracao = 0;
     Solucao sol, sol2;
 
-    srand(time(NULL));
+    //srand(time(NULL));
 
     ler_arquivo("../csp25.txt");
-    //imprimir_dados_arquivo();
-    criar_solucao_aleatoria(sol);
+
+    for (int i=0; i<num_tarefas; i++) {
+        duracao += vet_hora_fim[i] - vet_hora_ini[i];
+    }
+
+    num_motoristas = duracao / temp_norm_trab;
+
+    criar_solucao_gulosa(sol);
     calcular_fo_solucao(sol);
     imprimir_solucao(sol);
 /*
     memcpy(&sol2, &sol, sizeof(sol2));
 
-    for (int i=0; i<10000; i++) {
+    for (int i=0; i<100000; i++) {
         gerar_vizinho(sol2);
         if (sol2.fo <= sol.fo) {
             memcpy(&sol, &sol2, sizeof(sol));
@@ -42,7 +49,7 @@ void ler_arquivo(char* path) {
     FILE* f = fopen(path, "r");
 
     fscanf(f, "%d %d %d", &num_tarefas, &temp_norm_trab, &temp_max_trab);
-    for (int i=0; i<MAX_TAR; i++) {
+    for (int i=0; i<num_tarefas; i++) {
         fscanf(f, "%d %d", &vet_hora_ini[i], &vet_hora_fim[i]);
     }
 
@@ -51,7 +58,7 @@ void ler_arquivo(char* path) {
 
 void imprimir_dados_arquivo() {
     printf("%d %d %d\n", num_tarefas, temp_norm_trab, temp_max_trab);
-    for (int i=0; i<MAX_TAR; i++) {
+    for (int i=0; i<num_tarefas; i++) {
         printf("%d %d\n", vet_hora_ini[i], vet_hora_fim[i]);
     }
 }
@@ -62,11 +69,10 @@ void criar_solucao(Solucao& sol) {
 
     int aux = 0;
     for (int i=0; i<num_tarefas; i++) {
-        aux = i % MAX_MOT;
+        aux = i % num_motoristas;
         sol.mat_sol[aux][sol.aux[aux]] = i;
         sol.aux[aux]++;
     }
-
 }
 
 void criar_solucao_aleatoria(Solucao& sol) {
@@ -75,14 +81,39 @@ void criar_solucao_aleatoria(Solucao& sol) {
 
     int mot;
     for (int i=0; i<num_tarefas; i++) {
-        mot = rand() % (MAX_MOT-1); //DUVIDA: COLOCAR -1?
+        mot = rand() % num_motoristas;
         sol.mat_sol[mot][sol.aux[mot]] = i;
         sol.aux[mot]++;
     }
 }
 
 void criar_solucao_gulosa(Solucao& sol) {
+    memset(&sol.mat_sol, -1, sizeof(sol.mat_sol));
+    memset(&sol.aux, 0, sizeof(sol.aux));
 
+    //diminuindo o tempo ocioso
+    for (int i=0; i<num_tarefas; i++) {
+        for (int j=0; j<num_motoristas; j++) {
+            if ( 
+                vet_hora_fim[ sol.mat_sol[j][sol.aux[j]] ] <= vet_hora_ini[i] && 
+                
+            ) {
+                sol.mat_sol[j][sol.aux[j]] = i;
+                sol.aux[j]++;
+                break;
+            }
+/*
+            if (vet_hora_fim[sol.mat_sol[i][j]] < vet_hora_ini[sol.mat_sol[i][j+1]]) {
+                sol.mat_sol[i][sol.aux[i]] = j;
+            }
+*/
+        }
+    }
+
+    //sem sobreposição
+
+
+    //sem hora extra
 }
 
 void criar_solucao_aleatoria_gulosa(Solucao& sol) {
@@ -95,7 +126,7 @@ void calcular_fo_solucao(Solucao& sol) {
     memset(&sol.vet_hora_trab, 0, sizeof(sol.vet_hora_trab));
     sol.hora_extra = sol.temp_exces = sol.temp_ocios = sol.temp_sobre = 0;
 
-    for (int i=0; i<MAX_MOT; i++) {
+    for (int i=0; i<num_motoristas; i++) {
         if (sol.aux[i] > 0) {
             for (int j=1; j<sol.aux[i]; j++) {
                 //--------------------------CALCULAR HORA TRABALHADA--------------------------------------------
@@ -130,14 +161,14 @@ void gerar_vizinho(Solucao& sol) {
 
     int mot_pre, mot_pos, pos_tar, tar;
     do {
-        mot_pre = rand() % MAX_MOT;
+        mot_pre = rand() % num_motoristas;
     } while (sol.aux[mot_pre] == 0);
 
     pos_tar = rand() % (sol.aux[mot_pre]);
     tar = sol.mat_sol[mot_pre][pos_tar];
 
     do {
-        mot_pos = rand() % MAX_MOT;
+        mot_pos = rand() % num_motoristas;
     } while (mot_pos == mot_pre);
 
     remover_tarefa(sol, pos_tar, mot_pre);
@@ -149,13 +180,15 @@ void gerar_vizinho(Solucao& sol) {
 
 void imprimir_solucao(Solucao& sol) {
     printf("\nMatriz solucao: \n");
-    for (int i=0; i<MAX_MOT; i++) {
-        printf("%4d |", i);
-        printf(" %4d |", sol.aux[i]);
-        for (int j=0; j<MAX_TAR; j++) {
-            printf("%4d ", sol.mat_sol[i][j]);
+    for (int i=0; i<num_motoristas; i++) {
+        if (sol.aux[i] > 0) {
+            printf("%4d |", i);
+            printf(" %4d |", sol.aux[i]);
+            for (int j=0; j<sol.aux[i]; j++) {
+                printf("%4d ", sol.mat_sol[i][j]);
+            }
+            printf("\n");
         }
-        printf("\n");
     }
 
     printf("\nValor TEMPO OCIOSO ENTRE TAREFAS: %d\n", sol.temp_ocios);
