@@ -3,6 +3,7 @@
 #include "header.h"
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 #define MAX(X,Y) (X > Y ? X : Y)
 #define MIN(X,Y) (X < Y ? X : Y)
@@ -13,7 +14,8 @@
 #define PEN_TEM_EXC 100
 
 int main() {
-    int duracao = 0;
+    double duracao = 0;
+    int taxa = 50;
     Solucao sol, sol2;
 
     srand(time(NULL));
@@ -24,12 +26,16 @@ int main() {
         duracao += vet_hora_fim[i] - vet_hora_ini[i];
     }
 
-    num_motoristas = (duracao / temp_norm_trab) + 1;
+    num_motoristas = ceil(duracao / temp_norm_trab);
 
     criar_solucao_gulosa(sol);
     calcular_fo_solucao(sol);
-    //imprimir_solucao(sol);
+    imprimir_solucao(sol);
 
+    criar_solucao_aleatoria_gulosa(sol, taxa);
+    calcular_fo_solucao(sol);
+    imprimir_solucao(sol);
+/*
     memcpy(&sol2, &sol, sizeof(sol2));
 
     for (int i=0; i<100000; i++) {
@@ -41,7 +47,7 @@ int main() {
 
     imprimir_solucao(sol);
     imprimir_solucao(sol2);
-
+*/
     return 0;
 }
 
@@ -107,17 +113,32 @@ void criar_solucao_aleatoria(Solucao& sol) {
 void criar_solucao_gulosa(Solucao& sol) {
     memset(&sol.mat_sol, -1, sizeof(sol.mat_sol));
     memset(&sol.aux, 0, sizeof(sol.aux));
+    memset(&sol.vet_hora_trab, 0, sizeof(sol.vet_hora_trab));
+    int aux = 0;
 
     for (int i=0; i<num_tarefas; i++) {
+        aux = 1;
         for (int j=0; j<num_motoristas; j++) {
             if (
                 //sobreposição
-                vet_hora_fim[ sol.mat_sol[j][MAX(sol.aux[j]-1, 0)] ] <= vet_hora_ini[i]
+                vet_hora_fim[ sol.mat_sol[j][MAX(sol.aux[j]-1, 0)] ] <= vet_hora_ini[i] &&
+
+                //hora máxima permitida
+                (sol.vet_hora_trab[j] + vet_hora_fim[i] - vet_hora_ini[i]) <= temp_max_trab
             ) {
                 sol.mat_sol[j][sol.aux[j]] = i;
+                sol.vet_hora_trab[j] += vet_hora_fim[i] - vet_hora_ini[i];
                 sol.aux[j]++;
+                aux = 0;
                 break;
             }
+
+        }
+        if (aux == 1) {
+            sol.mat_sol[num_motoristas][sol.aux[num_motoristas]] = i;
+            sol.vet_hora_trab[num_motoristas] += vet_hora_fim[num_motoristas] - vet_hora_ini[i];
+            sol.aux[num_motoristas]++;
+            num_motoristas++;
 
         }
     }
@@ -128,7 +149,49 @@ void criar_solucao_gulosa(Solucao& sol) {
     //sem hora extra
 }
 
-void criar_solucao_aleatoria_gulosa(Solucao& sol) {
+void criar_solucao_aleatoria_gulosa(Solucao& sol, int taxa) {
+    memset(&sol.mat_sol, -1, sizeof(sol.mat_sol));
+    memset(&sol.aux, 0, sizeof(sol.aux));
+    memset(&sol.vet_hora_trab, 0, sizeof(sol.vet_hora_trab));
+
+    //aleatória
+    int mot, aux;
+    aux = (((double)taxa / 100.0)) * num_motoristas;
+    for (int i=0; i<aux; i++) {
+        mot = rand() % num_motoristas;
+        sol.mat_sol[mot][sol.aux[mot]] = i;
+        sol.aux[mot]++;
+    }
+
+    //gulosa
+    aux = 0;
+
+    for (int i=(int)((taxa / 100) * num_motoristas); i<num_tarefas; i++) {
+        aux = 1;
+        for (int j=0; j<num_motoristas; j++) {
+            if (
+                //sobreposição
+                vet_hora_fim[ sol.mat_sol[j][MAX(sol.aux[j]-1, 0)] ] <= vet_hora_ini[i] &&
+
+                //hora máxima permitida
+                (sol.vet_hora_trab[j] + vet_hora_fim[i] - vet_hora_ini[i]) <= temp_max_trab
+            ) {
+                sol.mat_sol[j][sol.aux[j]] = i;
+                sol.vet_hora_trab[j] += vet_hora_fim[i] - vet_hora_ini[i];
+                sol.aux[j]++;
+                aux = 0;
+                break;
+            }
+
+        }
+        if (aux == 1) {
+            sol.mat_sol[num_motoristas][sol.aux[num_motoristas]] = i;
+            sol.vet_hora_trab[num_motoristas] += vet_hora_fim[num_motoristas] - vet_hora_ini[i];
+            sol.aux[num_motoristas]++;
+            num_motoristas++;
+
+        }
+    }
 
 }
 
