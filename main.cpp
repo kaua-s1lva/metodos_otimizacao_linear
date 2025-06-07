@@ -143,11 +143,6 @@ void criar_solucao_gulosa(Solucao& sol) {
 
         }
     }
-
-    //sem sobreposição
-
-
-    //sem hora extra
 }
 
 void criar_solucao_aleatoria_gulosa(Solucao& sol, int taxa) {
