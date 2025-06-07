@@ -106,6 +106,7 @@ void criar_solucao_aleatoria(Solucao& sol) {
     for (int i=0; i<num_tarefas; i++) {
         mot = rand() % num_motoristas;
         sol.mat_sol[mot][sol.aux[mot]] = i;
+        sol.vet_hora_trab[mot] += vet_hora_fim[i] - vet_hora_ini[i];
         sol.aux[mot]++;
     }
 }
@@ -160,13 +161,14 @@ void criar_solucao_aleatoria_gulosa(Solucao& sol, int taxa) {
     for (int i=0; i<aux; i++) {
         mot = rand() % num_motoristas;
         sol.mat_sol[mot][sol.aux[mot]] = i;
+        sol.vet_hora_trab[mot] += vet_hora_fim[i] - vet_hora_ini[i];
         sol.aux[mot]++;
     }
 
     //gulosa
     aux = 0;
 
-    for (int i=(int)((taxa / 100) * num_motoristas); i<num_tarefas; i++) {
+    for (int i=(((double)taxa / 100.0)) * num_motoristas; i<num_tarefas; i++) {
         aux = 1;
         for (int j=0; j<num_motoristas; j++) {
             if (
