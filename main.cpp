@@ -17,7 +17,7 @@ int main() {
 
     Solucao sol;
 
-    ler_arquivo("../inst20.txt");
+    ler_arquivo("../inst5.txt");
     //imprimir_dados_arquivo();
 
     num_hub = MAX(0.2 * num_nos, 2);
@@ -26,6 +26,20 @@ int main() {
     calcular_solucao(sol);
     imprimir_solucao(sol);
 
+    Solucao sol2;
+
+    memcpy(&sol2, &sol, sizeof(sol2));
+
+    for (int i=0; i<10; i++) {
+        gerar_vizinho(sol2);
+        calcular_solucao(sol2);
+        imprimir_solucao(sol2);
+        if (sol2.fo < sol.fo) {
+            memcpy(&sol, &sol2, sizeof(sol));
+        }
+    }
+    
+    imprimir_solucao(sol);
     return 0;
 }
 
@@ -43,7 +57,7 @@ void calcular_solucao(Solucao& sol) {
     int aux = 0;
     float mat_aux[MAX_NOS * MAX_NOS][5];
 
-    //gerando a tabela de possibilidades
+    //gerando a tabela de todas as possibilidades (matriz auxiliar)
     for (int i=0; i<pow(num_nos, 2); i++) {
         for (int j=0; j<pow(num_hub, 2); j++) {
             //origem
@@ -69,22 +83,8 @@ void calcular_solucao(Solucao& sol) {
         }
     }
 
-    aux = 0;
-    //calculando matriz solução
-    for (int i=0; i<pow(num_nos, 2); i++) {
-        for (int j=0; j<pow(num_hub, 2); j++) {
-            if (sol.mat_sol[i][4] < mat_aux[i+1][4]) {
-                sol.mat_sol[aux][0] = mat_aux[aux][0];
-                sol.mat_sol[aux][1] = mat_aux[aux][1];
-                sol.mat_sol[aux][2] = mat_aux[aux][2];
-                sol.mat_sol[aux][3] = mat_aux[aux][3];
-                sol.mat_sol[aux][4] = mat_aux[aux][4];
-            }
-            aux++;
-        }
-    }
-
     //setando valores iniciais
+    aux = 0;
     for (int i=0; i < (pow(num_nos, 2)); i++) {
         for (int j=0; j < 5; j++) {
             sol.mat_sol[i][j] = mat_aux[i * (int) pow(num_hub, 2)][j];
@@ -112,17 +112,17 @@ void calcular_solucao(Solucao& sol) {
             sol.fo = sol.mat_sol[i][4];
         }
     }
-/*
-    printf("\nMatriz auxiliar: \n");
-    for (int i=0; i < (pow(num_hub, 2) * pow(num_nos, 2)); i++) {
+    
+}
 
-        for (int j=0; j<5; j++) {
-            printf("%5.2f ", mat_aux[i][j]);
-        }
-        printf("\n");
+void gerar_vizinho(Solucao& sol) {
+    int pos, hub;
+    pos = rand() % num_hub;
+    hub = sol.vet_hub[pos];
+
+    while (hub == sol.vet_hub[pos]) {
+        sol.vet_hub[pos] = rand() % num_nos;
     }
-*/
-
 }
 
 void ler_arquivo(char* path) {
@@ -164,11 +164,7 @@ void imprimir_solucao(Solucao& sol) {
 
 void imprimir_dados_arquivo() {
     printf("Numero de Nos: %d\n", num_nos);
-/*
-    for (int i=0; i<num_nos; i++) {
-        printf("%5.2f %5.2f\n", x[i], y[i]);
-    }
-*/
+
     for (int i=0; i<num_nos; i++) {
         for (int j=0; j<num_nos; j++) {
             printf("%10.2f ", mat_dis[i][j]);
