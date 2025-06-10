@@ -17,15 +17,15 @@ int main() {
 
     Solucao sol;
 
-    ler_arquivo("../inst5.txt");
-    //imprimir_dados_arquivo();
+    ler_arquivo("../inst10.txt");
+    imprimir_dados_arquivo();
 
-    num_hub = MAX(0.2 * num_nos, 2);
+    num_hub = MAX(0.2 * num_nos, 3);
 
-    gerar_solucao(sol);
+    criar_solucao_gulosa(sol);
     calcular_solucao(sol);
     imprimir_solucao(sol);
-
+/*
     Solucao sol2;
 
     memcpy(&sol2, &sol, sizeof(sol2));
@@ -40,14 +40,76 @@ int main() {
     }
     
     imprimir_solucao(sol);
+    */
     return 0;
 }
 
-void gerar_solucao(Solucao& sol) {
+void criar_solucao(Solucao& sol) {
     //determinar quais serão hubs
     for (int i = 0; i<num_hub; i++) {
         sol.vet_hub[i] = rand() % num_nos;
     }
+}
+
+void criar_solucao_aleatoria(Solucao& sol) {
+    for (int i = 0; i<num_hub; i++) {
+        sol.vet_hub[i] = rand() % num_nos;
+    }
+}
+
+void criar_solucao_gulosa(Solucao& sol) {
+    //Posso adotar que, quanto mais separado os hubs, melhor a distribuição
+    memset(&sol.vet_hub, 0, sizeof(sol.vet_hub));
+    int x=0, y=0, aux, vet_nos[MAX_NOS], i=2, hubs=2;
+
+    for (int i=0; i<num_nos; i++) {
+        vet_nos[i] = i;
+    }
+
+    //achando a posição do primeiro e segundo hub
+    for (int i=0; i<num_nos; i++) {
+        for (int j=0; j<i; j++) {
+            if (mat_dis[sol.vet_hub[0]][sol.vet_hub[1]] < mat_dis[i][j]) {
+                sol.vet_hub[0] = i;
+                sol.vet_hub[1] = j;
+            }
+        }
+    }
+
+    aux = 0;
+
+    //achando a posição dos demais hubs
+    bool jaEscolhido = false;
+    while (hubs < num_hub) {
+        aux = 0;
+        for (int i=0; i<hubs; i++) {
+            for (int j=0; j<num_nos; j++) {
+                jaEscolhido = false;
+                for (int k=0; k<hubs; k++) {
+                    if (j == sol.vet_hub[k]) {
+                        jaEscolhido = true;
+                        break;
+                    }
+                }
+
+                if (jaEscolhido) continue;
+    
+                if (aux < mat_dis[i][j]) {
+                    aux = mat_dis[i][j];
+                    x = i;
+                    y = j;
+                }
+            }
+        }
+        sol.vet_hub[hubs] = y;
+        hubs++;
+    }
+
+
+}
+
+void criar_solucao_aleatoria_gulosa(Solucao& sol) {
+    
 }
 
 void calcular_solucao(Solucao& sol) {
@@ -148,7 +210,7 @@ void imprimir_solucao(Solucao& sol) {
     printf("\nMatriz solucao: \n");
     for (int i=0; i < (pow(num_nos, 2)); i++) {
         for (int j=0; j<5; j++) {
-            printf("%10.2f ", sol.mat_sol[i][j]);
+            printf("%8.2f ", sol.mat_sol[i][j]);
         }
         printf("\n");
     }
@@ -163,6 +225,7 @@ void imprimir_solucao(Solucao& sol) {
 }
 
 void imprimir_dados_arquivo() {
+    /*
     printf("Numero de Nos: %d\n", num_nos);
 
     for (int i=0; i<num_nos; i++) {
@@ -170,5 +233,16 @@ void imprimir_dados_arquivo() {
             printf("%10.2f ", mat_dis[i][j]);
         }
         printf("\n");
+    }
+    */
+
+    FILE* f = fopen("../mat_dis.csv", "w");
+    //fprintf(f, "Numero de Nos: %d\n", num_nos);
+
+    for (int i=0; i<num_nos; i++) {
+        for (int j=0; j<num_nos; j++) {
+            fprintf(f, "%.0f/", mat_dis[i][j]);
+        }
+        fprintf(f, "\n");
     }
 }
