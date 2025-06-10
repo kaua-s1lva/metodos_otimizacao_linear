@@ -20,7 +20,7 @@ int main() {
     ler_arquivo("../inst10.txt");
     imprimir_dados_arquivo();
 
-    num_hub = MAX(0.2 * num_nos, 3);
+    num_hub = MAX(0.2 * num_nos, 4);
 
     criar_solucao_gulosa(sol);
     calcular_solucao(sol);
@@ -83,6 +83,7 @@ void criar_solucao_gulosa(Solucao& sol) {
     while (hubs < num_hub) {
         aux = 0;
         for (int i=0; i<hubs; i++) {
+            i = sol.vet_hub[i];
             for (int j=0; j<num_nos; j++) {
                 jaEscolhido = false;
                 for (int k=0; k<hubs; k++) {
