@@ -17,10 +17,10 @@ int main() {
 
     Solucao sol;
 
-    ler_arquivo("../inst10.txt");
+    ler_arquivo("../inst15.txt");
     imprimir_dados_arquivo();
 
-    num_hub = MAX(0.2 * num_nos, 4);
+    num_hub = MAX(0.2 * num_nos, 2);
 
     criar_solucao_gulosa(sol);
     calcular_solucao(sol);
@@ -60,7 +60,7 @@ void criar_solucao_aleatoria(Solucao& sol) {
 void criar_solucao_gulosa(Solucao& sol) {
     //Posso adotar que, quanto mais separado os hubs, melhor a distribuição
     memset(&sol.vet_hub, 0, sizeof(sol.vet_hub));
-    int x=0, y=0, aux, vet_nos[MAX_NOS], i=2, hubs=2;
+    int x=0, y=0, aux, vet_nos[MAX_NOS], i=2, hubs=2, pos;
 
     for (int i=0; i<num_nos; i++) {
         vet_nos[i] = i;
@@ -83,7 +83,7 @@ void criar_solucao_gulosa(Solucao& sol) {
     while (hubs < num_hub) {
         aux = 0;
         for (int i=0; i<hubs; i++) {
-            i = sol.vet_hub[i];
+            pos = sol.vet_hub[i];
             for (int j=0; j<num_nos; j++) {
                 jaEscolhido = false;
                 for (int k=0; k<hubs; k++) {
@@ -95,9 +95,9 @@ void criar_solucao_gulosa(Solucao& sol) {
 
                 if (jaEscolhido) continue;
     
-                if (aux < mat_dis[i][j]) {
-                    aux = mat_dis[i][j];
-                    x = i;
+                if (aux < mat_dis[pos][j]) {
+                    aux = mat_dis[pos][j];
+                    x = pos;
                     y = j;
                 }
             }
