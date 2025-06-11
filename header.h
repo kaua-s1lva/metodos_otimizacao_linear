@@ -18,3 +18,4 @@ void imprimir_dados_arquivo();
 void gerar_solucao(Solucao& sol);
 void calcular_fo(Solucao& sol);
 void imprimir_solucao(Solucao& sol);
+void gerar_vizinho(Solucao& sol);

@@ -4,6 +4,11 @@
 #include <string.h>
 #include "header.h"
 
+#define MAX(X,Y) (X > Y ? X : Y)
+#define MIN(X,Y) (X < Y ? X : Y)
+
+#define PESO 1000
+
 int main() {
     Solucao sol;
 
@@ -39,13 +44,25 @@ void calcular_fo(Solucao& sol) {
     }
 
     //custo entre os clientes e o trajeto final até o depósito
+    int capacidade;
     for (int i=0; i<num_vei; i++) {
+        capacidade = 0;
         for (int j=0; j<sol.vet_aux[i]; j++) {
-            sol.fo += mat_dis_cli[sol.mat_sol[i][j]][sol.mat_sol[i][j+1]];
+
+            capacidade += vet_dem_cli[ sol.mat_sol[i][j] ];
+            
+            if (capacidade > vet_cap_vei[i]) {
+                sol.fo += PESO * mat_dis_cli[sol.mat_sol[i][j]][sol.mat_sol[i][j+1]];
+            } else {
+                sol.fo += mat_dis_cli[sol.mat_sol[i][j]][sol.mat_sol[i][j+1]];
+            }
+            
         }
     }
+}
 
-    printf("\nValor da fo: %f", sol.fo);
+void gerar_vizinho(Solucao& sol) {
+    
 }
 
 void ler_arquivo(char* path) {
@@ -74,6 +91,7 @@ void ler_arquivo(char* path) {
 void imprimir_solucao(Solucao& sol) {
     printf("\n-----------------------------------------\n");
     printf("Dados da solucao: \n");
+    printf("\nValor da fo: %f\n", sol.fo);
 
     printf("\nMatriz solucao: \n");
     for (int i=0; i<num_vei; i++) {
