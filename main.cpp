@@ -12,16 +12,16 @@
 int main() {
     Solucao sol, sol2;
 
-    ler_arquivo("../instancia-toy.txt");
+    ler_arquivo("../instancia.txt");
     //imprimir_dados_arquivo();
-
+/*
     for (int i=1; i<=num_cli; i++) {
         printf(" %d ", vet_dem_cli[i]);
     }
-
-    //gerar_solucao_gulosa(sol);
-    //calcular_fo(sol);
-    //imprimir_solucao(sol);
+*/
+    gerar_solucao_gulosa(sol);
+    calcular_fo(sol);
+    imprimir_solucao(sol);
 /*
     memcpy(&sol2, &sol, sizeof(sol2));
     for (int i=0; i<10; i++) {
@@ -69,54 +69,84 @@ void gerar_matriz_ordenada(int&& mat_ord_dis) {
     }
 }
 */
-void gerar_solucao_gulosa(Solucao& sol) {
-    printf("\n\nVetor de demanda: \n");
-    for (int i=1; i<=num_cli; i++) {
-        printf(" %d ", vet_dem_cli[i]);
-    }
 
-    //gerar solução com base na capacidade dos veículos
-    int vet_dem_vei[MAX_VEI], vet_ord_cli[MAX_CLI], vet_cop_dem_cli[MAX_CLI];
-    
-    memset(&vet_dem_vei, 0, sizeof(vet_dem_vei));
-    memset(&sol.vet_aux, 0, sizeof(sol.vet_aux));
-    memset(&vet_ord_cli, 0, sizeof(vet_ord_cli));
+void ordenar_clientes_por_demanda(int* vet_ord_cli) {
+    int vet_cop_dem_cli[MAX_CLI];
+
+    memset(vet_ord_cli, 0, sizeof(vet_ord_cli));
     memcpy(&vet_cop_dem_cli, &vet_dem_cli, sizeof(vet_dem_cli));
-
-    printf("\n\n");
-
-    //ordenar clientes
+    
     for (int i=1; i<=num_cli; i++) {
         for (int j=1; j<=num_cli; j++) {
             if (vet_cop_dem_cli[ vet_ord_cli[i-1] ] < vet_cop_dem_cli[ j ] && vet_cop_dem_cli[ vet_ord_cli[i] ] != -1) {
-                printf("[%d][%d]: %d\n", i, j, vet_cop_dem_cli[ j ]);
                 vet_ord_cli[i-1] = j;
             }
         }
         vet_cop_dem_cli[ vet_ord_cli[i-1] ] = -1;
     }
+}
 
-    printf("\nVetor aux das pos dos clientes: \n");
-    for (int i=1; i<=num_cli; i++) {
-        printf("%d ", vet_ord_cli[i]);
-    }
+void gerar_solucao_gulosa(Solucao& sol) {
+
+    //gerar solução com base na capacidade dos veículos
+    int vet_dem_vei[MAX_VEI], vet_ord_cli[MAX_CLI], vei;
+    bool passou = false;
+    memset(&vet_dem_vei, 0, sizeof(vet_dem_vei));
+    memset(&sol.vet_aux, 0, sizeof(sol.vet_aux));
+
+    ordenar_clientes_por_demanda(vet_ord_cli);
 
     for (int i=1; i<=num_cli; i++) {
+        passou = false;
         for (int j=0; j<num_vei; j++) {
-            printf("demanda veiculo: %d   capacidade veiculo: %d\n", vet_dem_vei[j], vet_cap_vei[j]);
-            if (vet_dem_vei[j] <= vet_cap_vei[j]) {
-                sol.mat_sol[j][sol.vet_aux[j]] = i;
+            if (vet_dem_vei[j] + vet_dem_cli[vet_ord_cli[i-1]] <= vet_cap_vei[j]) {
+                sol.mat_sol[j][sol.vet_aux[j]] = vet_ord_cli[i-1];
                 sol.vet_aux[j]++;
-                vet_dem_vei[j] += vet_dem_cli[i];
-                //printf("%d: %d \n", j, vet_dem_cli[i]);
+                vet_dem_vei[j] += vet_dem_cli[vet_ord_cli[i-1]];
+                passou = true;
                 break;
             }
+        }
+        printf("[%d]: %d\n", i, passou);
+        if (!passou) {
+            printf(" %d ", i);
+            //vei = rand() % num_vei;
+
+            sol.mat_sol[vei][sol.vet_aux[vei]] = vet_ord_cli[i-1];
+            sol.vet_aux[vei]++;
+            vet_dem_vei[vei] += vet_dem_cli[vet_ord_cli[i-1]];
         }
     }
 }
 
 void gerar_solucao_aleatoria_gulosa(Solucao& sol) {
 
+    //gerar solução com base na capacidade dos veículos
+    int vet_dem_vei[MAX_VEI], vet_ord_cli[MAX_CLI], vei;
+    bool passou = false;
+    memset(&vet_dem_vei, 0, sizeof(vet_dem_vei));
+    memset(&sol.vet_aux, 0, sizeof(sol.vet_aux));
+
+    ordenar_clientes_por_demanda(vet_ord_cli);
+
+    for (int i=1; i<=num_cli; i++) {
+        passou = false;
+        for (int j=0; j<num_vei; j++) {
+            if (vet_dem_vei[j] + vet_dem_cli[vet_ord_cli[i-1]] <= vet_cap_vei[j]) {
+                sol.mat_sol[j][sol.vet_aux[j]] = vet_ord_cli[i-1];
+                sol.vet_aux[j]++;
+                vet_dem_vei[j] += vet_dem_cli[vet_ord_cli[i-1]];
+                passou = true;
+                break;
+            }
+        }
+        if (!passou) {
+            vei = rand() % num_vei;
+            sol.mat_sol[vei][sol.vet_aux[vei]] = vet_ord_cli[i-1];
+            sol.vet_aux[vei]++;
+            vet_dem_vei[vei] += vet_dem_cli[vet_ord_cli[i-1]];
+        }
+    }
 }
 
 void calcular_fo(Solucao& sol) {
