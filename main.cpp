@@ -13,18 +13,22 @@ int main() {
     Solucao sol, sol2;
 
     ler_arquivo("../instancia-toy.txt");
-    imprimir_dados_arquivo();
+    //imprimir_dados_arquivo();
 
-    gerar_solucao(sol);
-    calcular_fo(sol);
-    imprimir_solucao(sol);
+    for (int i=1; i<=num_cli; i++) {
+        printf(" %d ", vet_dem_cli[i]);
+    }
 
+    //gerar_solucao_gulosa(sol);
+    //calcular_fo(sol);
+    //imprimir_solucao(sol);
+/*
     memcpy(&sol2, &sol, sizeof(sol2));
     for (int i=0; i<10; i++) {
         gerar_vizinho(sol2);
         imprimir_solucao(sol2);
     }
-
+*/
     return 0;
 }
 
@@ -42,6 +46,7 @@ void gerar_solucao(Solucao& sol) {
 }
 
 void gerar_solucao_aleatoria(Solucao& sol) {
+    //ALTERAÇÃO!!!!!!!! fazer aleatório a posição para inserir o cliente
     memset(&sol.vet_aux, 0, sizeof(sol.vet_aux));
     memset(&sol.mat_sol, 0, sizeof(sol.mat_sol));
 
@@ -53,32 +58,60 @@ void gerar_solucao_aleatoria(Solucao& sol) {
         sol.vet_aux[vei]++;
     }
 }
-
-void gerar_solucao_gulosa(Solucao& sol) {
-    /*
-        IDEIA!!!!!!!!!!
-        Criar uma matriz ordenada para armazenar as posições dos clientes que estão menos longe
-        [
-            [0] => [0, 2, 1, 3]
-            [1] => [0, 1, 3, 2]
-            ...
-        ]
-    */
-
-
-    int j, mat_dis_cpy[MAX_VEI][MAX_CLI];
-    float distancia = mat_dis_cli[0][1];
-
-    memcpy(&mat_dis_cpy, &mat_dis_cli, sizeof(mat_dis_cpy));
-
-    //depósito -> primeiro cliente
+/*
+void gerar_matriz_ordenada(int&& mat_ord_dis) {
     for (int i=0; i<num_vei; i++) {
-        for (j=1; j<=num_cli; j++) {
-            if (distancia > mat_dis_cpy[0][j] && mat_dis_cpy[0][j] != -1) {
-                distancia = mat_dis_cpy[0][j];
+        for (int j=0; j<num_cli; j++) {
+            for (int k=j; k<num_cli; k++) {
+                if(mat_dis_cli[i][])
             }
         }
-        mat_dis_cpy[0][j] = -1;
+    }
+}
+*/
+void gerar_solucao_gulosa(Solucao& sol) {
+    printf("\n\nVetor de demanda: \n");
+    for (int i=1; i<=num_cli; i++) {
+        printf(" %d ", vet_dem_cli[i]);
+    }
+
+    //gerar solução com base na capacidade dos veículos
+    int vet_dem_vei[MAX_VEI], vet_ord_cli[MAX_CLI], vet_cop_dem_cli[MAX_CLI];
+    
+    memset(&vet_dem_vei, 0, sizeof(vet_dem_vei));
+    memset(&sol.vet_aux, 0, sizeof(sol.vet_aux));
+    memset(&vet_ord_cli, 0, sizeof(vet_ord_cli));
+    memcpy(&vet_cop_dem_cli, &vet_dem_cli, sizeof(vet_dem_cli));
+
+    printf("\n\n");
+
+    //ordenar clientes
+    for (int i=1; i<=num_cli; i++) {
+        for (int j=1; j<=num_cli; j++) {
+            if (vet_cop_dem_cli[ vet_ord_cli[i-1] ] < vet_cop_dem_cli[ j ] && vet_cop_dem_cli[ vet_ord_cli[i] ] != -1) {
+                printf("[%d][%d]: %d\n", i, j, vet_cop_dem_cli[ j ]);
+                vet_ord_cli[i-1] = j;
+            }
+        }
+        vet_cop_dem_cli[ vet_ord_cli[i-1] ] = -1;
+    }
+
+    printf("\nVetor aux das pos dos clientes: \n");
+    for (int i=1; i<=num_cli; i++) {
+        printf("%d ", vet_ord_cli[i]);
+    }
+
+    for (int i=1; i<=num_cli; i++) {
+        for (int j=0; j<num_vei; j++) {
+            printf("demanda veiculo: %d   capacidade veiculo: %d\n", vet_dem_vei[j], vet_cap_vei[j]);
+            if (vet_dem_vei[j] <= vet_cap_vei[j]) {
+                sol.mat_sol[j][sol.vet_aux[j]] = i;
+                sol.vet_aux[j]++;
+                vet_dem_vei[j] += vet_dem_cli[i];
+                //printf("%d: %d \n", j, vet_dem_cli[i]);
+                break;
+            }
+        }
     }
 }
 
