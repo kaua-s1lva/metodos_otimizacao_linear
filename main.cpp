@@ -21,7 +21,6 @@ int main() {
     imprimir_solucao(sol);
 
     heu_BL_PM(sol);
-    calcular_fo(sol);
 
     imprimir_solucao(sol);
     
@@ -143,29 +142,29 @@ void heu_BL_MM(Solucao& sol) {
             }
         }
     }
+
+    calcular_fo(sol);
 }
 
 void heu_BL_PM(Solucao& sol) {
     int moc_ori, mel_sol = sol.fo, flag = 1;
 
-    while (flag) {
-        flag = 0;
-        INICIO : ;
-        for (int i=0; i<num_obj; i++) {
-            for (int j=-1; j<num_moc; j++) {
-                moc_ori = sol.vet_obj[i];
-                sol.vet_obj[i] = j;
-                calcular_fo(sol);
-                if (mel_sol < sol.fo) {
-                    mel_sol = sol.fo;
-                    flag = 1;
-                    goto INICIO;
-                } else {
-                    sol.vet_obj[i] = moc_ori;
-                }
+    INICIO : ;
+    for (int i=0; i<num_obj; i++) {
+        for (int j=-1; j<num_moc; j++) {
+            moc_ori = sol.vet_obj[i];
+            sol.vet_obj[i] = j;
+            calcular_fo(sol);
+            if (mel_sol < sol.fo) {
+                mel_sol = sol.fo;
+                goto INICIO;
+            } else {
+                sol.vet_obj[i] = moc_ori;
             }
         }
     }
+
+    calcular_fo(sol);
 }
 
 void imprimir_solucao(Solucao& sol) {
