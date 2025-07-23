@@ -18,7 +18,7 @@ int main() {
     int taxa = 50;
     Solucao sol, sol2;
 
-    srand(time(NULL));
+    //srand(time(NULL));
 
     ler_arquivo("../csp25.txt");
 
@@ -28,12 +28,11 @@ int main() {
 
     num_motoristas = ceil(duracao / temp_norm_trab);
 
-    criar_solucao_gulosa(sol);
+    criar_solucao_aleatoria_gulosa(sol, 50);
     calcular_fo_solucao(sol);
     imprimir_solucao(sol);
 
-    criar_solucao_aleatoria_gulosa(sol, taxa);
-    calcular_fo_solucao(sol);
+    heu_BL_PM(sol);
     imprimir_solucao(sol);
 /*
     memcpy(&sol2, &sol, sizeof(sol2));
@@ -192,6 +191,85 @@ void criar_solucao_aleatoria_gulosa(Solucao& sol, int taxa) {
 
 }
 
+void heu_BL_rand(Solucao& sol, const int inter) {
+    int flag = 1;
+    Solucao vizinho;
+
+    while (flag) {
+        flag = 0;
+        for (int i=0; i<inter; i++) {
+            memcpy(&vizinho, &sol, sizeof(vizinho));
+            gerar_vizinho(vizinho);
+            calcular_fo_solucao(vizinho);
+            if (vizinho.fo <= sol.fo) {
+                memcpy(&sol, &vizinho, sizeof(sol));
+                flag = 1;
+            }
+        }
+    }
+
+    calcular_fo_solucao(sol);
+}
+
+void heu_BL_MM(Solucao& sol) {
+    int flag = 1, mel_sol = sol.fo, melhorou=0;
+
+    while (flag) {
+        flag = 0;
+        for (int i=0; i<num_motoristas; i++) {
+            for (int j=0; j<sol.aux[i]; j++) {
+                int tar = remover_tarefa_(sol, j, i);
+                for (int k=0; k<num_motoristas; k++) {
+                    if (k == i) continue;
+                    int pos = inserir_tarefa_(sol, tar, k);
+                    calcular_fo_solucao(sol);
+                    if (mel_sol > sol.fo) {
+                        mel_sol = sol.fo;
+                        melhorou = 1;
+                        flag = 1;
+                    } else {
+                        remover_tarefa(sol, pos, k);
+                    }
+                }
+                if (!melhorou) {
+                    inserir_tarefa(sol, tar, i);
+                }
+                melhorou = 0;
+            }
+        }
+    }
+    calcular_fo_solucao(sol);
+}
+
+void heu_BL_PM(Solucao& sol) {
+    int mel_sol = sol.fo, melhorou;
+
+    INICIO : ;
+    melhorou = 0;
+    for (int i=0; i<num_motoristas; i++) {
+        for (int j=0; j<sol.aux[i]; j++) {
+            int tar = remover_tarefa_(sol, j, i);
+            for (int k=0; k<num_motoristas; k++) {
+                if (k == i) continue;
+                int pos = inserir_tarefa_(sol, tar, k);
+                calcular_fo_solucao(sol);
+                if (mel_sol > sol.fo) {
+                    mel_sol = sol.fo;
+                    melhorou = 1;
+                    goto INICIO;
+                } else {
+                    remover_tarefa(sol, pos, k);
+                }
+            }
+            if (!melhorou) {
+                inserir_tarefa(sol, tar, i);
+            }
+            melhorou = 0;
+        }
+    }
+    calcular_fo_solucao(sol);
+}
+
 void calcular_fo_solucao(Solucao& sol) {
     sol.fo = 0;
 
@@ -285,10 +363,36 @@ void inserir_tarefa(Solucao& sol, int& tarefa, int& mot) {
     sol.aux[mot]++;
 }
 
+int inserir_tarefa_(Solucao& sol, int& tarefa, int& mot) {
+    int i;
+    for (i = sol.aux[mot] - 1; i>=0; i--) {
+        if (vet_hora_ini[sol.mat_sol[mot][i]] > vet_hora_ini[tarefa]) {
+            sol.mat_sol[mot][i + 1] = sol.mat_sol[mot][i];
+        } else {
+            break;
+        }
+    }
+
+    sol.mat_sol[mot][i + 1] = tarefa;
+    sol.aux[mot]++;
+    return i+1;
+}
+
 void remover_tarefa(Solucao& sol, int& pos, int& mot) {
     for (int i=pos; i<sol.aux[mot] - 1; i++) {
         sol.mat_sol[mot][i] = sol.mat_sol[mot][i+1];
     }
 
     sol.aux[mot]--;
+}
+
+int remover_tarefa_(Solucao& sol, int& pos, int& mot) {
+    int tar = sol.mat_sol[mot][pos];
+
+    for (int i=pos; i<sol.aux[mot] - 1; i++) {
+        sol.mat_sol[mot][i] = sol.mat_sol[mot][i+1];
+    }
+
+    sol.aux[mot]--;
+    return tar;
 }
