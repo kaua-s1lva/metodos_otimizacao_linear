@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "header.h"
 
 #define MAX(X,Y) (X > Y ? X : Y)
@@ -10,16 +11,21 @@
 #define PESO 1000
 
 int main() {
+    //srand(time(NULL));
     Solucao sol, sol2;
 
-    ler_arquivo("../instancia.txt");
+    ler_arquivo("../instancia-toy.txt");
     //imprimir_dados_arquivo();
 /*
     for (int i=1; i<=num_cli; i++) {
         printf(" %d ", vet_dem_cli[i]);
     }
 */
-    gerar_solucao_gulosa(sol);
+    //imprimir_dados_arquivo();
+    gerar_solucao_aleatoria(sol);
+    calcular_fo(sol);
+    imprimir_solucao(sol);
+    heu_BL_rand(sol, 100);
     calcular_fo(sol);
     imprimir_solucao(sol);
 /*
@@ -58,22 +64,11 @@ void gerar_solucao_aleatoria(Solucao& sol) {
         sol.vet_aux[vei]++;
     }
 }
-/*
-void gerar_matriz_ordenada(int&& mat_ord_dis) {
-    for (int i=0; i<num_vei; i++) {
-        for (int j=0; j<num_cli; j++) {
-            for (int k=j; k<num_cli; k++) {
-                if(mat_dis_cli[i][])
-            }
-        }
-    }
-}
-*/
 
 void ordenar_clientes_por_demanda(int* vet_ord_cli) {
     int vet_cop_dem_cli[MAX_CLI];
 
-    memset(vet_ord_cli, 0, sizeof(vet_ord_cli));
+    memset(vet_ord_cli, 0, (num_cli+1) * sizeof(int));
     memcpy(&vet_cop_dem_cli, &vet_dem_cli, sizeof(vet_dem_cli));
     
     for (int i=1; i<=num_cli; i++) {
@@ -107,11 +102,7 @@ void gerar_solucao_gulosa(Solucao& sol) {
                 break;
             }
         }
-        printf("[%d]: %d\n", i, passou);
         if (!passou) {
-            printf(" %d ", i);
-            //vei = rand() % num_vei;
-
             sol.mat_sol[vei][sol.vet_aux[vei]] = vet_ord_cli[i-1];
             sol.vet_aux[vei]++;
             vet_dem_vei[vei] += vet_dem_cli[vet_ord_cli[i-1]];
@@ -149,6 +140,34 @@ void gerar_solucao_aleatoria_gulosa(Solucao& sol) {
     }
 }
 
+void heu_BL_rand(Solucao& sol, int const &inter) {
+    Solucao v;
+    int flag = 1;
+
+    while (flag) {
+        flag = 0;
+        for (int i=0; i<inter; i++) {
+            memcpy(&v, &sol, sizeof(sol));
+            gerar_vizinho(v);
+            calcular_fo(v);
+            imprimir_solucao(v);
+            if (sol.fo > v.fo) {
+                memcpy(&sol, &v, sizeof(v));
+                flag = 1;
+            }
+        }
+    }
+
+}
+
+void heu_BL_MM(Solucao& sol) {
+
+}
+
+void heu_BL_PM(Solucao& sol) {
+
+}
+
 void calcular_fo(Solucao& sol) {
     sol.fo = 0;
 
@@ -176,8 +195,14 @@ void calcular_fo(Solucao& sol) {
 }
 
 void gerar_vizinho(Solucao& sol) {
-    int vei_pre, vei_pos, pos_cliente, cliente;
-    vei_pre = rand() % num_vei;
+    int vei_pre, vei_pos, pos_cliente, cliente, vei_usados=0, pos_cliente_pos;
+    for (int i=0; i<num_vei; i++) {
+        if (sol.vet_aux[i] != 0) {
+            vei_usados++;
+        }
+    }
+    
+    vei_pre = rand() % vei_usados;
 
     pos_cliente = rand() % sol.vet_aux[vei_pre];
     cliente = sol.mat_sol[vei_pre][pos_cliente];
@@ -192,11 +217,17 @@ void gerar_vizinho(Solucao& sol) {
     sol.vet_aux[vei_pre]--;
 
     //inserir cliente no veiculo
+    printf("\n\nCliente: %d, Veiculo: %d\n\n", pos_cliente, vei_pre);
+
     do {
         vei_pos = rand() % num_vei;
-    } while (vei_pre == vei_pos);
+        printf("\nvei_pos: %d\n", vei_pos);
+        pos_cliente_pos =  rand() % sol.vet_aux[vei_pos];
+        printf("\npos_cliente_pos: %d\n", pos_cliente_pos);
+    } while (vei_pre == vei_pos && pos_cliente_pos == pos_cliente);
 
-    sol.mat_sol[vei_pos][sol.vet_aux[vei_pos]] = cliente;
+    sol.mat_sol[vei_pos][pos_cliente_pos] = cliente;
+    imprimir_solucao(sol);
     sol.vet_aux[vei_pos]++;
 }
 
@@ -255,7 +286,7 @@ void imprimir_solucao(Solucao& sol) {
     printf("\nMatriz solucao: \n");
     for (int i=0; i<num_vei; i++) {
         for (int j=0; j<sol.vet_aux[i]; j++) {
-            printf("%d ", sol.mat_sol[i][j]);
+            printf("%3d ", sol.mat_sol[i][j]);
         }
         printf("\n");
     }

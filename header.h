@@ -23,3 +23,6 @@ void calcular_fo(Solucao& sol);
 void imprimir_solucao(Solucao& sol);
 void gerar_vizinho(Solucao& sol);
 void ordenar_clientes_por_demanda(int* vet_ord_cli);
+void heu_BL_rand(Solucao& sol, int const &inter);
+void heu_BL_MM(Solucao& sol);
+void heu_BL_PM(Solucao& sol);
