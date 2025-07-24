@@ -11,7 +11,7 @@
 int main() {
     //srand(time(NULL));
 
-    Solucao sol, sol2;
+    Solucao sol;
 
     ler_arquivo("../pmm1.txt");
     //imprimir_dados_arquivo();
@@ -20,7 +20,7 @@ int main() {
     calcular_fo(sol);
     imprimir_solucao(sol);
 
-    heu_BL_PM(sol);
+    heu_BL_MM(sol);
 
     imprimir_solucao(sol);
     
@@ -126,28 +126,34 @@ void heu_BL_rand(Solucao& sol, const int inter) {
 void heu_BL_MM(Solucao& sol) {
     int moc_ori, mel_sol = sol.fo, flag = 1;
 
+    int obj, moc;
+
     while (flag) {
         flag = 0;
         for (int i=0; i<num_obj; i++) {
+            moc_ori = sol.vet_obj[i];
             for (int j=-1; j<num_moc; j++) {
-                moc_ori = sol.vet_obj[i];
                 sol.vet_obj[i] = j;
                 calcular_fo(sol);
                 if (mel_sol < sol.fo) {
                     mel_sol = sol.fo;
+                    obj = i;
+                    moc = j;
                     flag = 1;
-                } else {
-                    sol.vet_obj[i] = moc_ori;
                 }
             }
+            sol.vet_obj[i] = moc_ori;
+        }
+
+        if (flag) {
+            sol.vet_obj[obj] = moc;
         }
     }
-
     calcular_fo(sol);
 }
 
 void heu_BL_PM(Solucao& sol) {
-    int moc_ori, mel_sol = sol.fo, flag = 1;
+    int moc_ori, mel_sol = sol.fo;
 
     INICIO : ;
     for (int i=0; i<num_obj; i++) {
