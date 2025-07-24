@@ -32,7 +32,7 @@ int main() {
     calcular_fo_solucao(sol);
     imprimir_solucao(sol);
 
-    heu_BL_PM(sol);
+    heu_BL_MM(sol);
     imprimir_solucao(sol);
 /*
     memcpy(&sol2, &sol, sizeof(sol2));
@@ -212,7 +212,10 @@ void heu_BL_rand(Solucao& sol, const int inter) {
 }
 
 void heu_BL_MM(Solucao& sol) {
-    int flag = 1, mel_sol = sol.fo, melhorou=0;
+    Solucao v;
+    int flag = 1, mel_sol = sol.fo;
+
+    memcpy(&v, &sol, sizeof(sol));
 
     while (flag) {
         flag = 0;
@@ -223,19 +226,17 @@ void heu_BL_MM(Solucao& sol) {
                     if (k == i) continue;
                     int pos = inserir_tarefa_(sol, tar, k);
                     calcular_fo_solucao(sol);
-                    if (mel_sol > sol.fo) {
-                        mel_sol = sol.fo;
-                        melhorou = 1;
+                    if (v.fo > sol.fo) {
+                        memcpy(&v, &sol, sizeof(sol));
                         flag = 1;
-                    } else {
-                        remover_tarefa(sol, pos, k);
                     }
+                    remover_tarefa(sol, pos, k);
                 }
-                if (!melhorou) {
-                    inserir_tarefa(sol, tar, i);
-                }
-                melhorou = 0;
+                inserir_tarefa(sol, tar, i);
             }
+        }
+        if (flag) {
+            memcpy(&sol, &v, sizeof(v));
         }
     }
     calcular_fo_solucao(sol);
